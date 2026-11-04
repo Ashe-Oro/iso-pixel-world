@@ -4,6 +4,7 @@
 // If episodeFor/findSeg/segPos exist (see references/animation.md), also checks every actor's position at both ends.
 const { chromium } = require('playwright');
 (async () => { const [,, file, ...qs] = process.argv; const b = await chromium.launch(); const pg = await b.newPage();
+  const errs = []; pg.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
   for (const q of (qs.length ? qs : [''])) {
     await pg.goto('file://' + file + (q ? '?' + q : '')); await pg.waitForTimeout(600);
     const r = await pg.evaluate(() => {
@@ -16,5 +17,8 @@ const { chromium } = require('playwright');
         for (const [name, tr] of Object.entries(e)) { if (!tr || !tr.segs) continue; const s0 = findSeg(tr, 0), s1 = findSeg(tr, LOOP - 1e-3);
           out.statesMatch[name] = JSON.stringify(segPos(s0, 0)) === JSON.stringify(segPos(s1, LOOP - 1e-3)); } }
       return out; });
-    console.log(q || '(default)', JSON.stringify(r)); }
+    console.log(q || '(default)', JSON.stringify(r));
+    const statesOk = !r.statesMatch || Object.values(r.statesMatch).every(Boolean);
+    if (!r.t120_equals_t0 || !statesOk) { console.error('FAIL: loop seam does not match'); process.exitCode = 1; } }
+  if (errs.length) { console.error(errs.join('\n')); process.exitCode = 1; }
   await b.close(); })();

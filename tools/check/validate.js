@@ -15,4 +15,6 @@ const { chromium } = require('playwright');
           for (const q of s) if (q.t1 < q.t0) bad.push(`${seed}/${ep}/${nm} negative ${q.anim || q.mode}`); } } }
     for (let k = 0; k < 400; k++) renderFrame(k * 1.37);
     return { episodes: n, count: bad.length, problems: bad.slice(0, 20) }; }, [+seeds, +eps]);
-  console.log(JSON.stringify(r)); if (errs.length) console.log(errs.join('\n')); await b.close(); })();
+  console.log(JSON.stringify(r)); if (errs.length) console.error(errs.join('\n'));
+  if (r.count > 0 || errs.length) { console.error('FAIL: timeline problems or page errors'); process.exitCode = 1; }
+  await b.close(); })();

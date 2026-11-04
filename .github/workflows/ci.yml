@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build scenes
+        run: tools/build.sh
+
+      - name: Built files match the source
+        run: |
+          if ! git diff --quiet -- public/; then
+            echo "public/ is out of date. Run tools/build.sh and commit the result."
+            git diff --stat -- public/
+            exit 1
+          fi
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+
+      - name: Loop seam and story timelines
+        run: |
+          for f in public/*/index.html; do
+            echo "== $f"
+            node tools/check/seam.js "$PWD/$f" "seed=7" "seed=2"
+            node tools/check/validate.js "$PWD/$f" 30 3
+          done
+
+      - name: Frame time (report only)
+        run: |
+          for f in public/*/index.html; do
+            echo "== $f"
+            node tools/check/perf.js "$PWD/$f"
+          done

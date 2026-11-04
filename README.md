@@ -27,6 +27,7 @@ tools/
   check/             screenshot, zoom, performance, loop-seam and timeline checks
 skills/iso-pixel/    the Claude skill describing how these scenes are made
 vercel.json          serves public/, adds trailing slashes
+.github/workflows/   CI checks on every push and pull request
 ```
 
 ## Working on a scene
@@ -60,7 +61,16 @@ node tools/check/validate.js "$PWD/public/dollhouse/index.html"
 2. In `public/index.html`, change one `Empty plot` entry in `PLACES` to the new scene:
    give it a `name`, `href: '/<name>/'`, a one-line `blurb` and `kind: 'house'`
    (or add a new kind with its own little island drawing).
-3. Commit and push. Vercel deploys from `main`.
+3. Commit and push (see below).
+
+## Deploys and checks
+
+- **Vercel** deploys every push to `main` to https://smol-iso-world.vercel.app and gives each
+  pull request its own preview URL. It serves `public/` as-is; there is no build step on Vercel.
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push and pull request. It rebuilds
+  the scenes and fails if `public/` doesn't match the source (run `tools/build.sh` before
+  committing), then checks that each scene loops seamlessly and that its story timelines have no
+  gaps. Frame times are reported but don't fail the run.
 
 ## Recording a long video
 
