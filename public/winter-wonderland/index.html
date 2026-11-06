@@ -42,11 +42,15 @@ a.ctl { text-decoration: none; display: inline-block; }
   opacity: 1; transition: opacity .6s ease; }
 #bar.idle { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { #bar { transition: none; } }
+/* ?embed=1: the bare scene, for the home page to play behind its own controls */
+html.embed #wrap { padding: 0; }
+html.embed #bar, html.embed #dbg { display: none; }
 </style>
 <div id="wrap"><canvas id="out" width="1920" height="1080" aria-label="An animated pixel-art snowy valley below snow-capped mountains: children sled down a hill and build a snowman that a big dog knocks over, while a couple in rocking chairs sip cocoa on the porch of a warm log cabin and their orange tabby comes out through the cat flap to snuggle."></canvas></div>
 <div id="dbg" hidden></div>
-<div id="bar"><a class="ctl" href="../">World map</a><button class="ctl" id="bCtl" type="button">Controls</button><button class="ctl" id="bFull" type="button">Fullscreen</button></div>
+<div id="bar"><a class="ctl" href="../#winter-wonderland">All worlds</a><button class="ctl" id="bCtl" type="button">Controls</button><button class="ctl" id="bFull" type="button">Fullscreen</button></div>
 <script>
+if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
 /* ---- 01_core.js ---- */
 'use strict';
 /* =====================================================================
@@ -2470,7 +2474,7 @@ function setupOverlay() {
   document.addEventListener('fullscreenchange', () => { syncFs(); fit(); });
   /* keep the screen awake while the scene plays (ignored where not allowed) */
   let lock = null;
-  const askWake = () => { if (!navigator.wakeLock || document.visibilityState !== 'visible' || lock) return;
+  const askWake = () => { if (!navigator.wakeLock || document.visibilityState !== 'visible' || lock || document.documentElement.classList.contains('embed')) return;
     navigator.wakeLock.request('screen').then(l => { lock = l; l.addEventListener('release', () => { lock = null; }); }).catch(() => {}); };
   document.addEventListener('visibilitychange', askWake); addEventListener('pointerdown', askWake, { passive: true }); askWake();
 }

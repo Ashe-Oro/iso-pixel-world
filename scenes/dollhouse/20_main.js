@@ -112,7 +112,7 @@ function setupOverlay() {
   document.addEventListener('fullscreenchange', () => { syncFs(); fit(); });
   /* keep the screen awake while the scene plays (ignored where not allowed) */
   let lock = null;
-  const askWake = () => { if (!navigator.wakeLock || document.visibilityState !== 'visible' || lock) return;
+  const askWake = () => { if (!navigator.wakeLock || document.visibilityState !== 'visible' || lock || document.documentElement.classList.contains('embed')) return;
     navigator.wakeLock.request('screen').then(l => { lock = l; l.addEventListener('release', () => { lock = null; }); }).catch(() => {}); };
   document.addEventListener('visibilitychange', askWake); addEventListener('pointerdown', askWake, { passive: true }); askWake();
 }
