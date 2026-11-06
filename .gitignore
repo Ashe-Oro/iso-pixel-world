@@ -1,5 +1,6 @@
 node_modules/
 *.png
+!public/posters/*.png
 *.artifact.html
 .DS_Store
 .vercel

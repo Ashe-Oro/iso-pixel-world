@@ -4,151 +4,155 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Smol Iso World</title>
-<meta name="description" content="Tiny living pixel-art worlds, each on its own floating island.">
+<meta name="description" content="Tiny pixel worlds, drawn in code and always moving. Choose one and step inside.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="posters/winter-wonderland.png">
 <style>
-:root{--bg:#0b0d1c;--panel:#16142a;--ink:#f3e6c8;--muted:#9a8fbd;--accent:#f2c46d;--line:#3d3159;--display:"Pixelify Sans",ui-monospace,Menlo,Consolas,monospace;--body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:dark}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
-.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 40px;display:grid;gap:18px}
-h1{font:700 clamp(30px,6vw,52px)/1 var(--display);margin:0;letter-spacing:.02em;color:var(--accent);text-wrap:balance}
-.lede{margin:6px 0 0;color:var(--muted);max-width:60ch}
-#map{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:#090b1a}
-#tip{margin:0;min-height:1.55em;font:500 15px/1.55 var(--display);color:var(--ink)}
-.places{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:0;padding:0;list-style:none}
-.place{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;gap:6px;align-content:start;min-width:0}
-.place h2{margin:0;font:700 19px/1.2 var(--display)}
-.place p{margin:0;color:var(--muted)}
-.place a{justify-self:start;color:var(--bg);background:var(--accent);text-decoration:none;font:700 14px/1 var(--display);padding:8px 12px;border-radius:4px}
-.place.empty h2{color:var(--muted)}
-a:focus-visible,#map:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+/* World select: the chosen world fills the window and keeps playing. The page has no palette of its
+   own. --bg and --accent come from the world on stage, and the text box copies the scenes' speech bubbles. */
+:root { --bg: #0e1a4a; --accent: #ffd884; --ink: #2e1a2c; --paper: #fff6ea; --k: 2; --px: 4px;
+  --font: "Pixelify Sans", ui-monospace, Menlo, Consolas, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 19px/1.3 var(--font); font-variant-ligatures: none; overflow: hidden; }
+/* the stage covers the window at 16:9 */
+.screen { --w: max(100vw, calc(100svh * 16 / 9)); --h: calc(var(--w) * 9 / 16); position: fixed; left: calc(50vw - var(--w) / 2); top: calc(50svh - var(--h) / 2);
+  width: var(--w); height: var(--h); overflow: hidden; background: var(--bg); }
+.screen > * { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; image-rendering: crisp-edges; image-rendering: pixelated; }
+.screen iframe { pointer-events: none; opacity: 0; }
+.screen iframe.on { opacity: 1; }
+/* pixel frame: the outline stops short of the corners, like the scenes' bubbles */
+.frame { --f: var(--ink); box-shadow: 0 calc(var(--px) * -1) 0 var(--f), 0 var(--px) 0 var(--f), calc(var(--px) * -1) 0 0 var(--f), var(--px) 0 0 var(--f); }
+.logo { position: fixed; left: max(32px, env(safe-area-inset-left)); top: max(26px, env(safe-area-inset-top)); margin: 0; pointer-events: none; color: var(--paper); text-shadow: 3px 3px 0 var(--ink); }
+.logo h1 { margin: 0; font: 700 clamp(30px, 3.4vw, 46px)/1 var(--font); letter-spacing: 0.01em; }
+.logo p { margin: 6px 0 0; font: 500 18px/1.2 var(--font); text-shadow: 2px 2px 0 var(--ink); }
+.box { position: fixed; left: max(32px, env(safe-area-inset-left)); bottom: max(28px, env(safe-area-inset-bottom)); width: min(460px, calc(100vw - 660px)); min-width: 340px; background: var(--paper); padding: 16px 20px 18px; }
+.box h2 { margin: 0 0 6px; font: 700 28px/1.1 var(--font); }
+.box p { margin: 0 0 14px; max-width: 46ch; min-height: 5.2em; }
+.go { display: inline-block; background: var(--ink); color: var(--paper); text-decoration: none; font: 700 19px/1 var(--font); padding: 10px 14px 11px; }
+.go:hover { background: var(--bg); color: var(--accent); }
+.go:active { transform: translateY(2px); }
+.worlds { position: fixed; right: max(32px, env(safe-area-inset-right)); bottom: max(28px, env(safe-area-inset-bottom)); }
+.worlds ul { display: flex; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.worlds a { display: block; width: calc(84px * var(--k)); color: var(--ink); text-decoration: none; background: var(--paper); }
+.crop { display: block; height: calc(48px * var(--k)); background-image: var(--poster); background-size: calc(640px * var(--k)) calc(360px * var(--k)); background-position: calc(var(--cx) * var(--k) * -1px) calc(var(--cy) * var(--k) * -1px); image-rendering: pixelated; }
+.label { display: block; padding: 3px 6px 4px; font: 500 15px/1.15 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.worlds a[aria-current="true"] { --f: var(--accent); transform: translateY(-4px); }
+.worlds a[aria-current="true"] .label { background: var(--accent); }
+a:focus-visible { outline: 3px solid var(--paper); outline-offset: 7px; }
+@media (max-width: 1040px) { .worlds { --k: 1.5; } }
+/* tall windows: the scene sits whole at the top and the controls follow it */
+@media (max-aspect-ratio: 3/2) {
+  body { overflow: auto; }
+  .screen { position: relative; left: 0; top: 0; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+  .logo { position: absolute; left: 14px; top: 12px; }
+  .logo h1 { font-size: 26px; } .logo p { display: none; }
+  .worlds, .box { position: static; width: auto; min-width: 0; }
+  .worlds { padding: 20px 16px 8px; }
+  .worlds ul { gap: 12px; justify-content: center; }
+  .worlds li { flex: 1 1 0; min-width: 0; max-width: 168px; }
+  .worlds a { width: 100%; }
+  .crop { --k: 1.25; background-position: calc((var(--cx) + 8) * var(--k) * -1px) calc((var(--cy) + 6) * var(--k) * -1px); height: 60px; }
+  .label { font-size: 14px; white-space: normal; min-height: 2.5em; }
+  .box { margin: 18px 16px 28px; }
+  .box p { min-height: 0; }
+}
+/* short windows, such as a phone on its side: keep the art, keep the choice, drop the rest */
+@media (max-height: 560px) and (min-aspect-ratio: 3/2) {
+  .logo { left: 16px; top: 12px; } .logo h1 { font-size: 24px; } .logo p, .box p { display: none; }
+  .box { left: 16px; bottom: 16px; width: auto; min-width: 0; max-width: 42vw; padding: 8px 12px 10px; } .box h2 { font-size: 19px; } .go { font-size: 16px; padding: 7px 10px 8px; }
+  .worlds { right: 16px; bottom: 16px; --k: 1.25; } .worlds ul { gap: 12px; }
+  .label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+}
+@media (max-height: 560px) and (min-aspect-ratio: 3/2) and (max-width: 720px) { .worlds { --k: 1; } .box h2 { display: none; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header><h1>Smol Iso World</h1><p class="lede">Tiny living pixel worlds, each on its own floating island. Tap an island to visit.</p></header>
-  <canvas id="map" width="480" height="270" tabindex="0" aria-label="World map of floating islands. The lit house is the Rainy Night Dollhouse, the autumn island with a maple and a waterfall is Sky Island, the snowy island with a log cabin is Winter Wonderland, and the other islands are empty plots."></canvas>
-  <p id="tip" aria-live="polite">Hover or tap an island.</p>
-  <ul class="places" id="places"></ul>
-</div>
+<div class="screen" id="screen"><img id="poster" src="posters/winter-wonderland.png" alt="A log cabin glowing warm in a snowy mountain valley at twilight, with children at a snowman and the northern lights above the peaks."></div>
+<header class="logo"><h1>Smol Iso World</h1><p>Tiny pixel worlds, drawn in code and always moving.</p></header>
+<nav class="worlds" aria-label="Choose a world">
+  <ul>
+    <li><a href="winter-wonderland/" data-world="winter-wonderland" data-t="128" aria-current="true" class="frame" style="--poster:url(posters/winter-wonderland.png);--cx:364;--cy:208;--world-bg:#0e1a4a;--world-accent:#ffd884"
+      data-blurb="Kids sled and build a snowman until a big dog knocks it down, while a couple rocks on the porch with cocoa and their cat comes out to snuggle."
+      data-alt="A log cabin glowing warm in a snowy mountain valley at twilight, with children at a snowman and the northern lights above the peaks."><span class="crop"></span><span class="label">Winter Wonderland</span></a></li>
+    <li><a href="sky-island/" data-world="sky-island" data-t="10" class="frame" style="--poster:url(posters/sky-island.png);--cx:286;--cy:146;--world-bg:#2c1b45;--world-accent:#f6a25c"
+      data-blurb="An autumn island above the clouds, from dusk to dawn. A girl reads on the porch, a boy fishes off the edge and a cat hunts the pond."
+      data-alt="A floating autumn island at sunset, with a maple, a cottage and a waterfall pouring into a sea of pink clouds."><span class="crop"></span><span class="label">Sky Island</span></a></li>
+    <li><a href="dollhouse/" data-world="dollhouse" data-t="6" class="frame" style="--poster:url(posters/dollhouse.png);--cx:136;--cy:136;--world-bg:#141a33;--world-accent:#e3a9a8"
+      data-blurb="A cutaway house on a stormy night. A girl reads by the fire while her dachshund and cat doze, wander and snuggle."
+      data-alt="A cutaway dollhouse on a rainy night, with lamplit rooms, a fire in the hearth and a girl reading on the sofa."><span class="crop"></span><span class="label">Rainy Night Dollhouse</span></a></li>
+  </ul>
+</nav>
+<section class="box frame" aria-live="polite"><h2 id="name">Winter Wonderland</h2><p id="blurb">Kids sled and build a snowman until a big dog knocks it down, while a couple rocks on the porch with cocoa and their cat comes out to snuggle.</p><a class="go" id="go" href="winter-wonderland/">Visit Winter Wonderland</a></section>
 <script>
-/* Places in the world. Add a new iso: give it a slug folder and an entry here. */
-const PLACES = [
-  { name: 'Rainy Night Dollhouse', href: '/dollhouse/', blurb: 'A cutaway house on a stormy night. A girl reads by the fire while her dachshund and cat doze.', x: 240, y: 152, w: 54, kind: 'house' },
-  { name: 'Empty plot', x: 106, y: 96, w: 28, kind: 'plot' },
-  { name: 'Sky Island', href: '/sky-island/', blurb: 'An autumn island above the clouds. A girl reads, a boy fishes off the edge, and a cat hunts the pond from dusk to dawn.', x: 386, y: 96, w: 44, kind: 'sky' },
-  { name: 'Winter Wonderland', href: '/winter-wonderland/', blurb: 'Kids sled and build a snowman, a big dog knocks it over, and a couple rock on the cabin porch with cocoa while their cat comes out to snuggle.', x: 94, y: 196, w: 44, kind: 'snow' },
-  { name: 'Empty plot', x: 390, y: 204, w: 26, kind: 'plot' },
-  { name: 'Empty plot', x: 250, y: 50, w: 20, kind: 'plot' }
-];
-const W = 480, H = 270, cv = document.getElementById('map'), g = cv.getContext('2d'), tip = document.getElementById('tip');
-const C = { sky: ['#090b1a', '#0e1226', '#141a33', '#1b2142', '#232a50', '#2c3260'], star: '#fff6d8', moon: '#e9e4cf', cl: ['#1f2340', '#2a2c4e', '#36365c'], rain: '#5d6ea3',
-  g0: '#2f5131', g1: '#467341', g2: '#6a9a50', g3: '#9ec66b', sn0: '#8e9ccc', sn1: '#b4c0e4', sn2: '#dde4f4', sn3: '#ffffff', pn0: '#2c6450', pn1: '#1c4c46', lg0: '#9e6232', lg1: '#7c4628', lg2: '#5a3020', au0: '#86663a', au1: '#a98443', au2: '#c7a24d', au3: '#e2c062', mp: ['#962a2c', '#bc3c2e', '#d85a2e', '#ec8034', '#f6a640'], tr: '#643a36', rf0: '#2c4450', rf1: '#48706c', rf2: '#5e8a7a', pl0: '#ac8280', pl1: '#e2bc9c', fall: '#d4a2ae', s0: '#3a2318', s1: '#55331f', r0: '#28252e', r1: '#393540', r2: '#534e5b',
-  w0: '#bfa784', w1: '#efe0c0', f0: '#82404f', f1: '#a75a68', f2: '#c87f87', win: '#f5b453', win2: '#ffd98a', wood: '#965c35', sign: '#e6bc84', ink: '#2a1f30', smoke: '#534e5b', hl: '#f2c46d', fl: ['#e3a9a8', '#fbf1dc', '#efba5c', '#9688ba'] };
-const hash = (a, b = 0) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b + 0x9e3779b9 | 0, 0x165667b1); h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; return (h >>> 0) / 4294967296; };
-const px = (x, y, c, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-/* static sky: dithered bands + moon */
-const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
-{ const b = bg.getContext('2d');
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const f = y / H * (C.sky.length - 1); let k = Math.floor(f); if ((f - k) * 16 > BAYER[(y & 3) * 4 + (x & 3)] && k < C.sky.length - 1) k++; b.fillStyle = C.sky[k]; b.fillRect(x, y, 1, 1); }
-  for (let y = -9; y <= 9; y++) for (let x = -9; x <= 9; x++) { const d = Math.hypot(x, y); if (d < 7) { b.fillStyle = x + y > 5 ? '#c9c6b8' : C.moon; b.fillRect(430 + x, 34 + y, 1, 1); } else if (d < 9 && BAYER[((y + 9) & 3) * 4 + ((x + 9) & 3)] < 6) { b.fillStyle = '#3d4170'; b.fillRect(430 + x, 34 + y, 1, 1); } } }
-const STARS = Array.from({ length: 60 }, (_, k) => [Math.floor(hash(k, 1) * W), Math.floor(hash(k, 2) * 150), hash(k, 3) * 6]);
-const CLOUDS = Array.from({ length: 6 }, (_, k) => ({ x: hash(k, 4) * W, y: 20 + hash(k, 5) * 140, s: 6 + hash(k, 6) * 8, v: 2 + hash(k, 7) * 3 }));
-function cloud(cx, cy, s) { for (let k = 0; k < 4; k++) { const ex = cx + (k - 1.5) * s * 0.9, ey = cy - (k === 1 || k === 2 ? s * 0.35 : 0), r = s * (k === 1 || k === 2 ? 0.8 : 0.6);
-  for (let y = -r; y <= r; y++) { const half = Math.floor(Math.sqrt(r * r - y * y) * 1.6); px(ex - half, ey + y, y < -r * 0.5 ? C.cl[2] : y < r * 0.3 ? C.cl[1] : C.cl[0], half * 2, 1); } } }
-/* islands */
-function island(p, t, hover) {
-  const bob = Math.round(Math.sin(t * 0.7 + p.x * 0.05) * 1.5), cx = Math.round(p.x), cy = Math.round(p.y + bob), w = p.w, h = w >> 1, depth = Math.round(w * 0.95);
-  const au = p.kind === 'sky', sn = p.kind === 'snow', g0 = sn ? C.sn0 : au ? C.au0 : C.g0, g1 = sn ? C.sn1 : au ? C.au1 : C.g1, g2 = sn ? C.sn2 : au ? C.au2 : C.g2, g3 = sn ? C.sn3 : au ? C.au3 : C.g3;
-  for (let dy = 0; dy < depth; dy++) { const f = dy / depth, half = Math.round(w * (1 - f) * (1 - f * 0.25) + (hash(p.x, dy) - 0.5) * 3);
-    if (half <= 0) continue; const col = dy < 3 ? C.s1 : dy < 6 ? C.s0 : (dy + (p.x >> 2)) % 7 === 0 ? C.r2 : f > 0.6 ? C.r0 : C.r1; px(cx - half, cy + dy, col, half * 2, 1);
-    if (dy > 4 && hash(p.x, dy * 3) > 0.8) px(cx - half + 2 + hash(dy, p.x) * (half * 2 - 4), cy + dy, C.r2); }
-  if ((Math.floor(t * 1.2 + p.x) % 5) === 0) { const f = (t * 1.2 + p.x) % 1; px(cx + (hash(p.x, 9) - 0.5) * w * 0.6, cy + depth * 0.7 + f * 30, C.rain); }
-  for (let dy = -h; dy <= h; dy++) { const half = Math.round(w * (1 - Math.abs(dy) / h)); if (half <= 0) continue;
-    px(cx - half, cy + dy, dy > h - 2 ? g0 : g1, half * 2, 1);
-    for (let x = -half + 1; x < half - 1; x += 3) { const q = hash(p.x + x, dy); if (q > 0.82) px(cx + x, cy + dy, q > 0.96 ? g3 : g2); } }
-  px(cx - w, cy, g2, 1, 1); px(cx + w - 1, cy, g0, 1, 1);
-  if (!sn) for (let k = 0; k < Math.round(w / 6); k++) { const a = hash(p.x, k + 20) * 2 - 1, b = hash(p.y, k + 30) * 2 - 1; if (Math.abs(a) + Math.abs(b) > 0.9) continue; px(cx + a * w * 0.8, cy + b * h * 0.8, C.fl[k % 4]); }
-  if (hover) for (let dy = -h - 1; dy <= h + 1; dy++) { const half = Math.round((w + 2) * (1 - Math.abs(dy) / (h + 1))); if ((dy + Math.floor(t * 6)) & 1) { px(cx - half, cy + dy, C.hl); px(cx + half - 1, cy + dy, C.hl); } }
-  if (p.kind === 'house') house(cx, cy - 2, w, t); else if (p.kind === 'sky') maple(cx, cy - 2, w, t); else if (p.kind === 'snow') cabin(cx, cy - 2, w, t); else sign(cx, cy, t);
+/* Without this script the page still works: the first world shows and every link goes to its scene. */
+const $ = id => document.getElementById(id), W = 640, H = 360, DUR = 520;
+const screen_ = $('screen'), poster = $('poster'), links = [...document.querySelectorAll('.worlds a')];
+const calm = matchMedia('(prefers-reduced-motion: reduce)'), noLive = () => calm.matches || (navigator.connection && navigator.connection.saveData);
+let cur = 0, live = null, liveTimer = 0, wiping = 0, pointer = 'mouse';
+const canvas = (w = W, h = H) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+/* 8x8 ordered dither, the same family as the scenes' own light bands */
+const BAYER = (() => { let m = [0]; for (let n = 1; n < 8; n *= 2) { const s = m.length, o = new Array(s * 4); for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const v = m[y * n + x] * 4; o[y * 2 * n + x] = v; o[y * 2 * n + x + n] = v + 2; o[(y + n) * 2 * n + x] = v + 3; o[(y + n) * 2 * n + x + n] = v + 1; } m = o; } return m.map(v => v / 64); })();
+const THRESH = new Float32Array(W * H); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) THRESH[y * W + x] = 0.42 * BAYER[(y & 7) * 8 + (x & 7)] + 0.58 * (y / H);
+const images = links.map(a => { const im = new Image(); im.src = 'posters/' + a.dataset.world + '.png'; return im; });
+const stage = canvas(), g = stage.getContext('2d'), from = canvas(), fg = from.getContext('2d'), mask = canvas(), mg = mask.getContext('2d'), layer = canvas(), lg = layer.getContext('2d');
+const md = mg.createImageData(W, H), m32 = new Uint32Array(md.data.buffer);
+stage.hidden = true; stage.setAttribute('aria-hidden', 'true'); screen_.append(stage);
+/* what is on screen right now, to dissolve away from */
+function snapshot() {
+  try {
+    if (!stage.hidden) { fg.drawImage(stage, 0, 0); return true; }
+    const c = live && live.classList.contains('on') && live.contentDocument && live.contentDocument.getElementById('out');
+    fg.drawImage(c || poster, 0, 0, W, H); return true;
+  } catch (e) { return false; }
 }
-function house(cx, cy, w, t) {
-  const S = Math.round(w * 0.42), Hh = Math.round(S * 0.95), front = cy + Math.round(S * 0.25), top = front - Hh;
-  for (let i = 0; i < S; i++) { const yl = top - (i >> 1); px(cx - 1 - i, yl, i < 1 ? C.w0 : C.w1, 1, Hh); px(cx + i, top - (i >> 1), C.w0, 1, Hh); }
-  const glow = Math.sin(t * 3) > -0.6 ? C.win2 : C.win;
-  for (const [ox, oy] of [[-S * 0.35, -Hh * 0.55], [-S * 0.75, -Hh * 0.55], [-S * 0.55, -Hh * 0.2]]) { const x = Math.round(cx + ox), y = Math.round(front + oy - (Math.abs(ox) >> 1)); px(x - 1, y - 2, glow, 3, 3); px(x - 1, y + 1, C.w0, 3, 1); }
-  { const x = Math.round(cx + S * 0.5), y = Math.round(front - (S * 0.5 >> 1)); px(x - 1, y - 6, C.wood, 3, 6); px(x, y - 4, C.win, 1, 1); }
-  const apex = top - S + 1 - Math.round(S * 0.55);
-  for (let i = -S - 1; i <= S; i++) { const edge = top - (Math.abs(i + 0.5) >> 1) + 1, k = 1 - Math.abs(i + 0.5) / (S + 1), ytop = Math.round(apex + (1 - k) * (S * 0.9));
-    px(cx + i, ytop, i < 0 ? C.f2 : C.f1, 1, Math.max(1, edge - ytop)); if (((edge - ytop) > 3) && ((i & 3) === 0)) px(cx + i, ytop + 2, i < 0 ? C.f1 : C.f0, 1, edge - ytop - 3); px(cx + i, edge, C.f0, 1, 1); }
-  const chx = Math.round(cx + S * 0.45), chy = Math.round(apex + S * 0.45); px(chx, chy - 6, '#7a352a', 3, 7); px(chx - 1, chy - 7, C.r1, 5, 1);
-  for (let k = 0; k < 4; k++) { const f = (t * 0.35 + k / 4) % 1, r = 1 + f * 3; g.globalAlpha = 0.75 * (1 - f); px(chx + 1 + f * 10 - r, chy - 9 - f * 22 - r, C.smoke, r * 2, r * 2); g.globalAlpha = 1; }
-  px(cx + S + 3, front - 12, C.r0, 1, 12); px(cx + S + 2, front - 15, C.win2, 3, 3);
+function stopLive() { clearTimeout(liveTimer); if (live) { live.remove(); live = null; } }
+function startLive() {
+  stopLive(); if (noLive()) return;
+  const a = links[cur], f = document.createElement('iframe');
+  f.src = `${a.dataset.world}/?embed=1&t=${a.dataset.t}`; f.title = ''; f.tabIndex = -1; f.setAttribute('aria-hidden', 'true');
+  /* it starts on the poster's exact frame, so the still picture simply begins to move */
+  f.onload = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (live === f) f.classList.add('on'); }));
+  live = f; screen_.insertBefore(f, stage);
 }
-function maple(cx, cy, w, t) {
-  /* cottage on the right: two walls, a teal roof, a lit window */
-  const S = Math.round(w * 0.3), Hh = Math.round(S * 0.7), front = cy + Math.round(S * 0.3) + 3, top = front - Hh, ox = cx + Math.round(w * 0.2);
-  for (let i = 0; i < S; i++) { px(ox - 1 - i, top - (i >> 1), C.pl1, 1, Hh); px(ox + i, top - (i >> 1), C.pl0, 1, Hh); }
-  { const x = ox - Math.round(S * 0.6), y = front - Math.round(Hh * 0.7) - (S >> 2); px(x, y, Math.sin(t * 3) > -0.6 ? C.win2 : C.win, 3, 3); }
-  const apex = top - S + 1 - Math.round(S * 0.3);
-  for (let i = -S - 1; i <= S; i++) { const edge = top - (Math.abs(i + 0.5) >> 1) + 1, k = 1 - Math.abs(i + 0.5) / (S + 1), ytop = Math.round(apex + (1 - k) * (S * 0.8));
-    px(ox + i, ytop, i < 0 ? C.rf2 : C.rf1, 1, Math.max(1, edge - ytop)); px(ox + i, edge, C.rf0, 1, 1); }
-  /* maple on the left, with a leaf drifting down */
-  const tx = cx - Math.round(w * 0.42), ty = cy - 2; px(tx - 1, ty - 9, C.tr, 3, 10);
-  for (const [dx, dy, r, k] of [[0, -17, 8, 2], [-6, -13, 6, 1], [6, -14, 6, 3], [-3, -21, 5, 4], [2, -11, 5, 0], [4, -19, 4, 3]])
-    for (let y = -r; y <= r; y++) { const half = Math.round(Math.sqrt(r * r - y * y)); px(tx + dx - half, ty + dy + y, C.mp[k], half * 2 + 1, 1); }
-  const f = (t * 0.22) % 1; px(tx + 5 + Math.sin(f * 9) * 3 + f * 8, ty - 9 + f * 16, C.mp[3]);
-  /* the waterfall off the front rim */
-  const fx = cx + Math.round(w * 0.16); for (let k = 0; k < 26; k++) if ((k + Math.floor(t * 12)) % 4) px(fx, cy + Math.round(w * 0.42) + k, C.fall);
+function dissolve(to) {
+  const id = ++wiping, t0 = performance.now(); stage.hidden = false;
+  const step = now => {
+    if (id !== wiping) return;
+    const p = Math.min(1, (now - t0) / DUR);
+    for (let k = 0; k < m32.length; k++) m32[k] = THRESH[k] < p ? 0xff000000 : 0;
+    mg.putImageData(md, 0, 0);
+    lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, W, H); lg.drawImage(to, 0, 0, W, H);
+    lg.globalCompositeOperation = 'destination-in'; lg.drawImage(mask, 0, 0);
+    g.drawImage(from, 0, 0); g.drawImage(layer, 0, 0);
+    if (p < 1) requestAnimationFrame(step); else stage.hidden = true;
+  };
+  requestAnimationFrame(step);
 }
-function cabin(cx, cy, w, t) {
-  /* a little hill on the left, a log cabin with a snowy roof on the right, and snow coming down */
-  const hx = cx - Math.round(w * 0.45); for (let i = -13; i <= 13; i++) { const top = Math.round(11 * Math.cos(i / 13 * Math.PI / 2)); px(hx + i, cy - top, i < 0 ? C.sn3 : i < 7 ? C.sn2 : C.sn1, 1, top + 2); }
-  for (const [dx, dy] of [[-13, -2], [11, 3]]) { const tx = hx + dx, ty = cy + dy; px(tx, ty - 2, C.tr, 1, 3); for (let k = 0; k < 7; k++) px(tx - (k >> 1), ty - 9 + k, k & 1 ? C.pn1 : C.pn0, (k >> 1) * 2 + 1, 1); px(tx, ty - 10, C.sn3); }
-  const S = Math.round(w * 0.3), Hh = Math.round(S * 0.75), front = cy + Math.round(S * 0.3) + 3, top = front - Hh, ox = cx + Math.round(w * 0.2);
-  for (let i = 0; i < S; i++) { const y0 = top - (i >> 1); for (let k = 0; k < Hh; k++) { px(ox - 1 - i, y0 + k, k % 2 ? C.lg1 : C.lg0, 1, 1); px(ox + i, y0 + k, k % 2 ? C.lg2 : C.lg1, 1, 1); } }
-  { const x = ox - Math.round(S * 0.6), y = front - Math.round(Hh * 0.7) - (S >> 2); px(x, y, Math.sin(t * 3) > -0.6 ? C.win2 : C.win, 4, 3); px(ox - Math.round(S * 0.25), front - 6 - (S >> 3), '#a8362e', 2, 5); }
-  const apex = top - S + 1 - Math.round(S * 0.3);
-  for (let i = -S - 1; i <= S; i++) { const edge = top - (Math.abs(i + 0.5) >> 1) + 1, k = 1 - Math.abs(i + 0.5) / (S + 1), ytop = Math.round(apex + (1 - k) * (S * 0.8)); px(ox + i, ytop, i < 0 ? C.sn3 : C.sn2, 1, Math.max(1, edge - ytop)); px(ox + i, edge, C.sn0, 1, 1); }
-  const chx = ox - 2, chy = apex + 2; px(chx, chy - 5, C.r2, 3, 5); for (let k = 0; k < 3; k++) { const f = (t * 0.3 + k / 3) % 1, r = 1 + f * 2; g.globalAlpha = 0.7 * (1 - f); px(chx + 1 + f * 8 - r, chy - 7 - f * 16 - r, '#c8d0e8', r * 2, r * 2); g.globalAlpha = 1; }
-  for (let k = 0; k < 12; k++) { const f = (t * (0.18 + hash(k, 41) * 0.1) + hash(k, 42)) % 1; px(cx - w + hash(k, 43) * w * 2 + Math.sin(f * 7 + k) * 2, cy - 30 + f * 42, '#f4f6fc'); }
+function select(i, instant) {
+  if (i === cur && !instant) return;
+  const a = links[i], d = a.dataset, can = !instant && !calm.matches && images[i].complete && snapshot();
+  links[cur].removeAttribute('aria-current'); a.setAttribute('aria-current', 'true'); cur = i;
+  const s = a.style, root = document.documentElement.style; root.setProperty('--bg', s.getPropertyValue('--world-bg')); root.setProperty('--accent', s.getPropertyValue('--world-accent'));
+  const name = a.querySelector('.label').textContent; $('name').textContent = name; $('blurb').textContent = d.blurb; $('go').textContent = 'Visit ' + name; $('go').href = a.getAttribute('href');
+  poster.src = images[i].src; poster.alt = d.alt; stopLive();
+  if (can) dissolve(images[i]); else { wiping++; stage.hidden = true; }
+  history.replaceState(null, '', '#' + d.world);
+  liveTimer = setTimeout(startLive, can ? DUR + 240 : 240);      // long enough that skimming the list doesn't start three scenes
 }
-function sign(cx, cy, t) {
-  px(cx, cy - 8, C.wood, 1, 8); px(cx - 4, cy - 13, C.sign, 9, 5); px(cx - 4, cy - 9, C.wood, 9, 1);
-  px(cx - 1, cy - 12, C.ink, 3, 1); px(cx + 1, cy - 11, C.ink, 1, 1); px(cx, cy - 10, C.ink, 1, 1);
-  if (Math.sin(t * 2 + cx) > 0.92) px(cx + 6, cy - 16, '#d8ff7a', 1, 1);
-}
-/* frame */
-let hoverIdx = -1;
-function draw(ms) {
-  const t = ms / 1000; g.drawImage(bg, 0, 0);
-  for (const [x, y, ph] of STARS) if (Math.sin(t * 1.3 + ph * 7) > -0.2) px(x, y, Math.sin(t * 1.3 + ph * 7) > 0.7 ? C.star : '#8a9dcb');
-  for (const c of CLOUDS) cloud(((c.x + t * c.v) % (W + 80)) - 40, c.y, c.s);
-  const order = PLACES.map((p, i) => i).sort((a, b) => PLACES[a].y - PLACES[b].y);
-  for (const i of order) island(PLACES[i], t, i === hoverIdx);
-  g.fillStyle = C.rain;
-  for (let k = 0; k < 70; k++) { const sp = 140 + hash(k, 8) * 60, y = (hash(k, 9) * (H + 20) + t * sp) % (H + 20) - 10, x = (hash(k, 10) * (W + 40) - y / 4) % (W + 40);
-    g.fillRect(Math.round(x), Math.round(y), 1, 3); }
-  requestAnimationFrame(draw);
-}
-function pick(ev) {
-  const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
-  let best = -1, bd = 1e9;
-  PLACES.forEach((p, i) => { const d = Math.abs(x - p.x) / p.w + Math.abs(y - (p.y - p.w * 0.2)) / (p.w * 0.8); if (d < 1 && d < bd) { bd = d; best = i; } });
-  return best;
-}
-function say(i) { const p = PLACES[i]; tip.textContent = i < 0 ? 'Hover or tap an island.' : p.href ? p.name + ' — tap to visit' : 'An empty plot, waiting for its iso.'; }
-cv.addEventListener('pointermove', e => { const i = pick(e); if (i !== hoverIdx) { hoverIdx = i; say(i); cv.style.cursor = i >= 0 && PLACES[i].href ? 'pointer' : 'default'; } });
-cv.addEventListener('pointerleave', () => { hoverIdx = -1; say(-1); });
-cv.addEventListener('click', e => { const i = pick(e); hoverIdx = i; say(i); if (i >= 0 && PLACES[i].href) location.href = PLACES[i].href; });
-cv.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = PLACES[0].href; });
-/* list */
-const ul = document.getElementById('places'), open = PLACES.filter(p => p.href), empty = PLACES.length - open.length;
-ul.innerHTML = open.map(p => `<li class="place"><h2>${p.name}</h2><p>${p.blurb}</p><a href="${p.href}">Visit</a></li>`).join('') +
-  (empty ? `<li class="place empty"><h2>${empty} empty plots</h2><p>Each one is waiting for a new iso. Every scene gets its own island.</p></li>` : '');
-requestAnimationFrame(draw);
+links.forEach((a, i) => {
+  a.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') select(i); });
+  a.addEventListener('focus', () => { if (a.matches(':focus-visible')) select(i); });                                // keyboard only: a tap also focuses, and must not count as the first tap
+  a.addEventListener('click', e => { if (pointer !== 'mouse' && i !== cur) { e.preventDefault(); select(i); } });   // on touch, the first tap shows the world
+});
+addEventListener('pointerdown', e => { pointer = e.pointerType; }, true);
+addEventListener('keydown', e => {
+  const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return;
+  e.preventDefault(); const n = (cur + d + links.length) % links.length; select(n); if (document.activeElement && document.activeElement.closest('.worlds')) links[n].focus();
+});
+const start = links.findIndex(a => '#' + a.dataset.world === location.hash);
+if (start > 0) select(start, true); else if (document.readyState === 'complete') startLive(); else addEventListener('load', startLive);
 </script>
 </body>
 </html>
