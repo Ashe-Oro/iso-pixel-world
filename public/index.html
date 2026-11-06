@@ -28,7 +28,7 @@ a:focus-visible,#map:focus-visible{outline:2px solid var(--accent);outline-offse
 <body>
 <div class="wrap">
   <header><h1>Smol Iso World</h1><p class="lede">Tiny living pixel worlds, each on its own floating island. Tap an island to visit.</p></header>
-  <canvas id="map" width="480" height="270" tabindex="0" aria-label="World map of floating islands. The lit house is the Rainy Night Dollhouse, the autumn island with a maple and a waterfall is Sky Island, and the other islands are empty plots."></canvas>
+  <canvas id="map" width="480" height="270" tabindex="0" aria-label="World map of floating islands. The lit house is the Rainy Night Dollhouse, the autumn island with a maple and a waterfall is Sky Island, the snowy island with a log cabin is Winter Wonderland, and the other islands are empty plots."></canvas>
   <p id="tip" aria-live="polite">Hover or tap an island.</p>
   <ul class="places" id="places"></ul>
 </div>
@@ -38,13 +38,13 @@ const PLACES = [
   { name: 'Rainy Night Dollhouse', href: '/dollhouse/', blurb: 'A cutaway house on a stormy night. A girl reads by the fire while her dachshund and cat doze.', x: 240, y: 152, w: 54, kind: 'house' },
   { name: 'Empty plot', x: 106, y: 96, w: 28, kind: 'plot' },
   { name: 'Sky Island', href: '/sky-island/', blurb: 'An autumn island above the clouds. A girl reads, a boy fishes off the edge, and a cat hunts the pond from dusk to dawn.', x: 386, y: 96, w: 44, kind: 'sky' },
-  { name: 'Empty plot', x: 86, y: 200, w: 24, kind: 'plot' },
+  { name: 'Winter Wonderland', href: '/winter-wonderland/', blurb: 'Kids sled and build a snowman, a big dog knocks it over, and a couple rock on the cabin porch with cocoa while their cat comes out to snuggle.', x: 94, y: 196, w: 44, kind: 'snow' },
   { name: 'Empty plot', x: 390, y: 204, w: 26, kind: 'plot' },
   { name: 'Empty plot', x: 250, y: 50, w: 20, kind: 'plot' }
 ];
 const W = 480, H = 270, cv = document.getElementById('map'), g = cv.getContext('2d'), tip = document.getElementById('tip');
 const C = { sky: ['#090b1a', '#0e1226', '#141a33', '#1b2142', '#232a50', '#2c3260'], star: '#fff6d8', moon: '#e9e4cf', cl: ['#1f2340', '#2a2c4e', '#36365c'], rain: '#5d6ea3',
-  g0: '#2f5131', g1: '#467341', g2: '#6a9a50', g3: '#9ec66b', au0: '#86663a', au1: '#a98443', au2: '#c7a24d', au3: '#e2c062', mp: ['#962a2c', '#bc3c2e', '#d85a2e', '#ec8034', '#f6a640'], tr: '#643a36', rf0: '#2c4450', rf1: '#48706c', rf2: '#5e8a7a', pl0: '#ac8280', pl1: '#e2bc9c', fall: '#d4a2ae', s0: '#3a2318', s1: '#55331f', r0: '#28252e', r1: '#393540', r2: '#534e5b',
+  g0: '#2f5131', g1: '#467341', g2: '#6a9a50', g3: '#9ec66b', sn0: '#8e9ccc', sn1: '#b4c0e4', sn2: '#dde4f4', sn3: '#ffffff', pn0: '#2c6450', pn1: '#1c4c46', lg0: '#9e6232', lg1: '#7c4628', lg2: '#5a3020', au0: '#86663a', au1: '#a98443', au2: '#c7a24d', au3: '#e2c062', mp: ['#962a2c', '#bc3c2e', '#d85a2e', '#ec8034', '#f6a640'], tr: '#643a36', rf0: '#2c4450', rf1: '#48706c', rf2: '#5e8a7a', pl0: '#ac8280', pl1: '#e2bc9c', fall: '#d4a2ae', s0: '#3a2318', s1: '#55331f', r0: '#28252e', r1: '#393540', r2: '#534e5b',
   w0: '#bfa784', w1: '#efe0c0', f0: '#82404f', f1: '#a75a68', f2: '#c87f87', win: '#f5b453', win2: '#ffd98a', wood: '#965c35', sign: '#e6bc84', ink: '#2a1f30', smoke: '#534e5b', hl: '#f2c46d', fl: ['#e3a9a8', '#fbf1dc', '#efba5c', '#9688ba'] };
 const hash = (a, b = 0) => { let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b + 0x9e3779b9 | 0, 0x165667b1); h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; return (h >>> 0) / 4294967296; };
 const px = (x, y, c, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
@@ -61,7 +61,7 @@ function cloud(cx, cy, s) { for (let k = 0; k < 4; k++) { const ex = cx + (k - 1
 /* islands */
 function island(p, t, hover) {
   const bob = Math.round(Math.sin(t * 0.7 + p.x * 0.05) * 1.5), cx = Math.round(p.x), cy = Math.round(p.y + bob), w = p.w, h = w >> 1, depth = Math.round(w * 0.95);
-  const au = p.kind === 'sky', g0 = au ? C.au0 : C.g0, g1 = au ? C.au1 : C.g1, g2 = au ? C.au2 : C.g2, g3 = au ? C.au3 : C.g3;
+  const au = p.kind === 'sky', sn = p.kind === 'snow', g0 = sn ? C.sn0 : au ? C.au0 : C.g0, g1 = sn ? C.sn1 : au ? C.au1 : C.g1, g2 = sn ? C.sn2 : au ? C.au2 : C.g2, g3 = sn ? C.sn3 : au ? C.au3 : C.g3;
   for (let dy = 0; dy < depth; dy++) { const f = dy / depth, half = Math.round(w * (1 - f) * (1 - f * 0.25) + (hash(p.x, dy) - 0.5) * 3);
     if (half <= 0) continue; const col = dy < 3 ? C.s1 : dy < 6 ? C.s0 : (dy + (p.x >> 2)) % 7 === 0 ? C.r2 : f > 0.6 ? C.r0 : C.r1; px(cx - half, cy + dy, col, half * 2, 1);
     if (dy > 4 && hash(p.x, dy * 3) > 0.8) px(cx - half + 2 + hash(dy, p.x) * (half * 2 - 4), cy + dy, C.r2); }
@@ -70,9 +70,9 @@ function island(p, t, hover) {
     px(cx - half, cy + dy, dy > h - 2 ? g0 : g1, half * 2, 1);
     for (let x = -half + 1; x < half - 1; x += 3) { const q = hash(p.x + x, dy); if (q > 0.82) px(cx + x, cy + dy, q > 0.96 ? g3 : g2); } }
   px(cx - w, cy, g2, 1, 1); px(cx + w - 1, cy, g0, 1, 1);
-  for (let k = 0; k < Math.round(w / 6); k++) { const a = hash(p.x, k + 20) * 2 - 1, b = hash(p.y, k + 30) * 2 - 1; if (Math.abs(a) + Math.abs(b) > 0.9) continue; px(cx + a * w * 0.8, cy + b * h * 0.8, C.fl[k % 4]); }
+  if (!sn) for (let k = 0; k < Math.round(w / 6); k++) { const a = hash(p.x, k + 20) * 2 - 1, b = hash(p.y, k + 30) * 2 - 1; if (Math.abs(a) + Math.abs(b) > 0.9) continue; px(cx + a * w * 0.8, cy + b * h * 0.8, C.fl[k % 4]); }
   if (hover) for (let dy = -h - 1; dy <= h + 1; dy++) { const half = Math.round((w + 2) * (1 - Math.abs(dy) / (h + 1))); if ((dy + Math.floor(t * 6)) & 1) { px(cx - half, cy + dy, C.hl); px(cx + half - 1, cy + dy, C.hl); } }
-  if (p.kind === 'house') house(cx, cy - 2, w, t); else if (p.kind === 'sky') maple(cx, cy - 2, w, t); else sign(cx, cy, t);
+  if (p.kind === 'house') house(cx, cy - 2, w, t); else if (p.kind === 'sky') maple(cx, cy - 2, w, t); else if (p.kind === 'snow') cabin(cx, cy - 2, w, t); else sign(cx, cy, t);
 }
 function house(cx, cy, w, t) {
   const S = Math.round(w * 0.42), Hh = Math.round(S * 0.95), front = cy + Math.round(S * 0.25), top = front - Hh;
@@ -102,6 +102,18 @@ function maple(cx, cy, w, t) {
   const f = (t * 0.22) % 1; px(tx + 5 + Math.sin(f * 9) * 3 + f * 8, ty - 9 + f * 16, C.mp[3]);
   /* the waterfall off the front rim */
   const fx = cx + Math.round(w * 0.16); for (let k = 0; k < 26; k++) if ((k + Math.floor(t * 12)) % 4) px(fx, cy + Math.round(w * 0.42) + k, C.fall);
+}
+function cabin(cx, cy, w, t) {
+  /* a little hill on the left, a log cabin with a snowy roof on the right, and snow coming down */
+  const hx = cx - Math.round(w * 0.45); for (let i = -13; i <= 13; i++) { const top = Math.round(11 * Math.cos(i / 13 * Math.PI / 2)); px(hx + i, cy - top, i < 0 ? C.sn3 : i < 7 ? C.sn2 : C.sn1, 1, top + 2); }
+  for (const [dx, dy] of [[-13, -2], [11, 3]]) { const tx = hx + dx, ty = cy + dy; px(tx, ty - 2, C.tr, 1, 3); for (let k = 0; k < 7; k++) px(tx - (k >> 1), ty - 9 + k, k & 1 ? C.pn1 : C.pn0, (k >> 1) * 2 + 1, 1); px(tx, ty - 10, C.sn3); }
+  const S = Math.round(w * 0.3), Hh = Math.round(S * 0.75), front = cy + Math.round(S * 0.3) + 3, top = front - Hh, ox = cx + Math.round(w * 0.2);
+  for (let i = 0; i < S; i++) { const y0 = top - (i >> 1); for (let k = 0; k < Hh; k++) { px(ox - 1 - i, y0 + k, k % 2 ? C.lg1 : C.lg0, 1, 1); px(ox + i, y0 + k, k % 2 ? C.lg2 : C.lg1, 1, 1); } }
+  { const x = ox - Math.round(S * 0.6), y = front - Math.round(Hh * 0.7) - (S >> 2); px(x, y, Math.sin(t * 3) > -0.6 ? C.win2 : C.win, 4, 3); px(ox - Math.round(S * 0.25), front - 6 - (S >> 3), '#a8362e', 2, 5); }
+  const apex = top - S + 1 - Math.round(S * 0.3);
+  for (let i = -S - 1; i <= S; i++) { const edge = top - (Math.abs(i + 0.5) >> 1) + 1, k = 1 - Math.abs(i + 0.5) / (S + 1), ytop = Math.round(apex + (1 - k) * (S * 0.8)); px(ox + i, ytop, i < 0 ? C.sn3 : C.sn2, 1, Math.max(1, edge - ytop)); px(ox + i, edge, C.sn0, 1, 1); }
+  const chx = ox - 2, chy = apex + 2; px(chx, chy - 5, C.r2, 3, 5); for (let k = 0; k < 3; k++) { const f = (t * 0.3 + k / 3) % 1, r = 1 + f * 2; g.globalAlpha = 0.7 * (1 - f); px(chx + 1 + f * 8 - r, chy - 7 - f * 16 - r, '#c8d0e8', r * 2, r * 2); g.globalAlpha = 1; }
+  for (let k = 0; k < 12; k++) { const f = (t * (0.18 + hash(k, 41) * 0.1) + hash(k, 42)) % 1; px(cx - w + hash(k, 43) * w * 2 + Math.sin(f * 7 + k) * 2, cy - 30 + f * 42, '#f4f6fc'); }
 }
 function sign(cx, cy, t) {
   px(cx, cy - 8, C.wood, 1, 8); px(cx - 4, cy - 13, C.sign, 9, 5); px(cx - 4, cy - 9, C.wood, 9, 1);
