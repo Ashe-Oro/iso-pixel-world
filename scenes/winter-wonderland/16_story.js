@@ -47,6 +47,23 @@ const ROLL_A = spline([[18, 39], [8, 38], [3, 30], [8, 21], [18, 23], [25, 29], 
 const ROLL_H = [[42, 34], [35, 33]];
 const ROLLS = { base: { P: ROLL_A, r0: 1.5, r1: BALL_R.base }, mid: { P: ROLL_B, r0: 1.5, r1: BALL_R.mid }, head: { P: ROLL_H, r0: BALL_R.head, r1: BALL_R.head } };
 for (const k in ROLLS) { const R_ = ROLLS[k]; R_.len = pathLen(R_.P); R_.kidP = cutPath(R_.P, R_.len - R_.r1 - 3); R_.kidLen = pathLen(R_.kidP); }
+/* ---- the yeti's route: a slalom through the ridge's real trees, passing in front of one and behind the
+   next, from off the right of the frame to a pine by the clearing behind the hill ---- */
+const YETI = { P: null, len: 0, brush: [], prints: [], pat: null };
+function slicePath(P_, a, b) { const lo = Math.min(a, b), hi = Math.max(a, b), out = [pointAt(P_, lo)]; let n = 0; for (let k = 1; k < P_.length; k++) { n += Math.hypot(P_[k][0] - P_[k - 1][0], P_[k][1] - P_[k - 1][1]); if (n > lo && n < hi) out.push(P_[k]); } out.push(pointAt(P_, hi)); return a <= b ? out : out.reverse(); }
+function yetiRoute() {
+  if (YETI.P) return YETI;
+  const edge = (u, v) => { const w = Math.max(v, vBack(u) + 1.8); return [uvToX(u, w), uvToY(u, w)]; }, pat = FOREST.slice().sort((a, b) => Math.abs(a.u + 12) - Math.abs(b.u + 12))[0];
+  const trees = FOREST.filter(q => q.u > pat.u + 8 && q.u < 128).sort((a, b) => b.u - a.u), pts = [edge(136, vBack(136) + 7)];
+  trees.forEach((q, k) => pts.push(edge(q.u, q.v + (k % 3 === 2 ? -2.6 : 4.6))));       // in front of two trees, behind the third
+  pts.push(edge(pat.u + 5.6, pat.v + 2.4));
+  const P_ = spline(pts); YETI.P = P_; YETI.len = pathLen(P_); YETI.pat = pat;
+  /* where the route passes each tree it brushes, and a footprint every stride */
+  let n = 0; const near = q => { let best = 1e9, at_ = 0, m = 0; for (let k = 1; k < P_.length; k++) { m += Math.hypot(P_[k][0] - P_[k - 1][0], P_[k][1] - P_[k - 1][1]); const d = Math.hypot(P_[k][0] - q.x, P_[k][1] - q.y); if (d < best) { best = d; at_ = m; } } return at_; };
+  trees.forEach((q, k) => { if (k % 2 === 0) YETI.brush.push({ q, d: near(q) }); });
+  for (let d = 2, s = 1; d < YETI.len; d += 3.2, s = -s) { const a = pointAt(P_, d), b = pointAt(P_, d + 0.5), m = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, x = a[0] - (b[1] - a[1]) / m * 1.7 * s, y = a[1] + (b[0] - a[0]) / m * 1.7 * s; YETI.prints.push({ d, x, y, h: hash2(Math.floor(d * 3), 77) }); }
+  return YETI;
+}
 function buildEpisode() {
   const P3 = q => at(q[0], q[1]);
   const A = tk(), B = tk(), Cc = tk(), Dd = tk(), SC_ = tk(), SD = tk(), Dg = tk(), Ct = tk(), Wm = tk(), Mn = tk();
@@ -125,7 +142,11 @@ function buildEpisode() {
   /* the couple */
   for (const [a, b, s] of [[0, 3.6, 'wave'], [3.6, 14, 'rock'], [14, 16.6, 'sip'], [16.6, T.CRASH + 0.5, 'rock'], [T.CRASH + 0.5, 49, 'laugh'], [49, 62, 'pet'], [62, 66, 'rock'], [66, 68.6, 'sip'], [68.6, 80, 'pet'], [80, 86, 'rock'], [86, 98, 'pet'], [98, 118, 'rock'], [118, 120.6, 'sip'], [120.6, 174, 'rock'], [174, 176.6, 'sip'], [176.6, 196, 'rock'], [196, 205, 'glance'], [205, 230, 'rock'], [230, LOOP, 'wave']]) Wm.hold(b, WOMAN, s);
   for (const [a, b, s] of [[0, 3.6, 'wave'], [3.6, 26, 'rock'], [26, 28.6, 'sip'], [28.6, T.CRASH + 0.7, 'rock'], [T.CRASH + 0.7, 49, 'laugh'], [49, 92, 'rock'], [92, 94.6, 'sip'], [94.6, 108, 'rock'], [108, 124, 'pet'], [124, 126.6, 'sip'], [126.6, 150, 'pet'], [150, 170, 'rock'], [170, 186, 'pet'], [186, 212, 'rock'], [212, 214.6, 'sip'], [214.6, 230, 'rock'], [230, LOOP, 'wave']]) Mn.hold(b, MAN, s);
-  return { ka: A, kb: B, kc: Cc, kd: Dd, sledC: SC_, sledD: SD, dog: Dg, cat: Ct, woman: Wm, man: Mn };
+  /* the yeti: in from the right, stops at the crash, on to the clearing, knocks the snow off a pine, waves, wanders home */
+  const R_ = yetiRoute(), Yt = tk(), D1 = R_.len * 0.46, gone = at(...R_.P[0]), mid = at(...pointAt(R_.P, D1)), end = at(...pointAt(R_.P, R_.len));
+  Yt.hold(8, gone, 'away').go(T.CRASH + 0.2, slicePath(R_.P, 0, D1), 'walk', { span: [0, D1] }).hold(51, mid, 'look', { face: -1 }).go(84, slicePath(R_.P, D1, R_.len), 'walk', { span: [D1, R_.len] })
+    .hold(95, end, 'pat', { face: -1 }).hold(103, end, 'stand', { face: -1 }).hold(105, end, 'front').hold(113, end, 'wave').hold(116, end, 'front').go(190, slicePath(R_.P, R_.len, 0), 'walk', { span: [R_.len, 0] }).hold(LOOP, gone, 'away');
+  return { ka: A, kb: B, kc: Cc, kd: Dd, sledC: SC_, sledD: SD, dog: Dg, cat: Ct, woman: Wm, man: Mn, yeti: Yt };
 }
 function episodeFor() { if (!EPI.has(0)) EPI.set(0, buildEpisode()); return EPI.get(0); }
 function buildSchedule() { EPI.clear(); }
@@ -399,6 +420,51 @@ function drawVisitors(t, lt) {
   }
 }
 
+/* ---- the yeti ---- */
+function treePuff(q, age, seed) {
+  if (age < 0 || age > 1.7) return;
+  const sx = Math.round(isx(q.x, q.y)), sy = Math.round(isy(q.x, q.y, q.z)), d = DEP(q.x, q.y, q.z) + 2 * q.h;
+  for (let k = 0; k < 16; k++) { const a = hash3(k, seed, 1) - 0.5, top = q.h * (0.3 + 0.65 * hash3(k, seed, 2)), i = sx + Math.round(a * q.h * (1 - top / q.h) * 0.75), f = age * age * 30 + age * 5, j = Math.round(sy - top + f); if (j > sy + 1) continue; dput(i, j, k & 1 ? SPARK_K : STEAM[0], d); if (k % 3 === 0) dput(i + 1, j, STEAM[0], d); }
+}
+function drawYetiTrail(t, lt) {
+  if (!FX.yeti) return;
+  const R_ = yetiRoute(), segs = episodeFor().yeti.segs;
+  for (const G of segs) {
+    if (!G.span) continue;
+    const [a, b] = G.span, when = d => G.t0 + (d - a) / (b - a) * (G.t1 - G.t0);
+    for (const q of R_.prints) {
+      if (q.d < Math.min(a, b) || q.d > Math.max(a, b)) continue; const age = lt - when(q.d); if (age < 0 || age > 36) continue; if (q.h < age / 36) continue;
+      const z = GZ(q.x, q.y), i = Math.floor(isx(q.x, q.y)), j = Math.floor(isy(q.x, q.y, z));
+      for (const [c, r] of [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]]) { const v = i + c, w = j + r; if (v < 0 || w < 0 || v >= IW || w >= IH) continue; const p = w * IW + v; if ((S.flag[p] & F_SNOW) && FR.dep[p] <= S.dep[p] + 0.01) FR.idx[p] = R.snow[r ? 2 : 1]; }
+    }
+    for (const B_ of R_.brush) if (B_.d >= Math.min(a, b) && B_.d <= Math.max(a, b)) treePuff(B_.q, lt - when(B_.d), Math.round(B_.d));
+  }
+  for (const s of [85.5, 88.5, 91.5]) treePuff(R_.pat, lt - s, s * 2);       // the pine it shakes on purpose
+}
+/* white fur takes the twilight the way the snow does and stays pale, while the outline, face and eyes
+   keep their dark values. Lit as one, the whole sprite washes out to a grey ghost. */
+function stampYeti(spr, wx, wy, wz, flip) {
+  const sx0 = Math.round(isx(wx, wy)) - (flip ? spr.w - 1 - spr.ax : spr.ax), sy0 = Math.round(isy(wx, wy, wz)) - spr.ay, d0 = DEP(wx, wy, wz) + 4, w = AMB_W + 33 * CUR_N, cFur = 130 * CUR_N, cDark = AMB_C * 0.5;
+  for (let r = 0; r < spr.h; r++) { const j = sy0 + r; if (j < 0 || j >= IH) continue;
+    for (let c = 0; c < spr.w; c++) { const col = spr.d[r * spr.w + (flip ? spr.w - 1 - c : c)]; if (!col) continue; const i = sx0 + c; if (i < 0 || i >= IW) continue;
+      const p = j * IW + i, dd = d0 + 2 * (spr.ay - r); if (dd < FR.dep[p]) continue; FR.idx[p] = col; FR.dep[p] = dd; FR.w[p] = w; FR.c[p] = Y_FUR.includes(col) ? cFur : cDark; } }
+}
+function drawYeti(t, lt) {
+  HEADS.yeti = null; if (!FX.yeti) return;
+  const seg = findSeg(episodeFor().yeti, lt), st = seg.anim; if (st === 'away') return;
+  const [x, y, z] = segPos(seg, lt), [sx, sy] = SP3(x, y, z);
+  let spr, flip = seg.face === -1, front = false;
+  if (st === 'walk') { const q = segPos(seg, Math.min(seg.t1 - 1e-3, lt + 0.05)), d = clamp((lt - seg.t0) / (seg.t1 - seg.t0), 0, 1) * seg.len; flip = (q[0] - x) - (q[1] - y) < 0; spr = yetiSide(Math.floor(d / 1.7) % 4, 'walk'); }
+  else if (st === 'pat') spr = yetiSide(phase(t, 1.5) < 0.5 ? 0 : 1, 'pat');
+  else if (st === 'look') spr = yetiSide(0, 'look');
+  else if (st === 'stand') spr = yetiSide(0, 'stand');
+  else { front = true; spr = yetiFront(st === 'wave' ? (phase(t, 1) < 0.5 ? 1 : 2) : 0); flip = false; }
+  shadowBlob(x, y, z, 13, 4, 0.24);
+  stampYeti(spr, x, y, z, flip);
+  HEADS.yeti = [sx + (front ? 1 : flip ? -9 : 8), sy - 42];
+  kidBreath(sx + (front ? 2 : flip ? -18 : 17), sy - 28, DEP(x, y, z) + 60, t, 5);
+}
+
 /* ---- the cardinal: lamp post, then the hat, then a hasty exit to the fairy-light pine ---- */
 const CM_B = { r: '#d8342e', R: '#a02830', k: '#2a1a24', y: '#f4a040', e: '#180c14' };
 const CARD_SIT = outl(smap(pad(['..r...', '.rrr..', 'kerry.', '.rrrr.', '..rRRR', '..y..y'.slice(0, 6)]), CM_B, 3, 7));
@@ -415,7 +481,7 @@ function drawCardinal(t, lt) {
 
 function drawCharacters(t) {
   const lt = mod(t, LOOP);
-  drawRollTrails(t, lt); drawFlap(lt, t); drawCouple(t, lt); drawCat(t, lt); drawSnowman(t, lt); drawDog(t, lt);
+  drawRollTrails(t, lt); drawYetiTrail(t, lt); drawYeti(t, lt); drawFlap(lt, t); drawCouple(t, lt); drawCat(t, lt); drawSnowman(t, lt); drawDog(t, lt);
   drawSledFor('sledC', 'kc', 0, t, lt); drawSledFor('sledD', 'kd', 1, t, lt);
   for (const k of ['ka', 'kb', 'kc', 'kd']) drawKid(k, t, lt);
   drawCardinal(t, lt); drawVisitors(t, lt);
@@ -446,7 +512,7 @@ const EMOTES = [
   ['ka', 'dots', 59.6, 2.2], ['kb', 'note', 60, 2], ['cat', 'heart', 37.4, 2.2], ['cat', 'heart', 44, 2.2], ['woman', 'heart', 50, 2.2],
   ...[56, 66, 76, 86, 96].map(s => ['cat', 'z', s, 2.4]), ['ka', 'note', 99.4, 2], ['kb', 'note', 99.8, 2], ['man', 'heart', 108, 2.2], ...[112, 122, 132, 142, 152, 162, 172, 182].map(s => ['cat', 'z', s, 2.4]),
   ['ka', 'note', 120, 2], ['kb', 'q', 145.4, 3], ['kb', 'heart', 157, 2.2], ['dog', 'heart', 158.6, 2.2], ['dog', 'heart', 174, 2.2], ['kb', 'note', 184.4, 2], ['man', 'heart', 186, 2.2], ['kc', 'bang', 205, 1.6],
-  ['ka', 'heart', T.HAT + 0.4, 2.4], ['kb', 'note', T.HAT + 0.8, 2.2], ['woman', 'heart', 232, 2.4], ['man', 'heart', 233, 2.4], ['dog', 'heart', 234, 2.2], ['kc', 'note', 231, 2.2]
+  ['yeti', 'bang', T.CRASH + 0.6, 2.2], ['yeti', 'note', 88, 2.4], ['yeti', 'heart', 107, 2.4], ['ka', 'heart', T.HAT + 0.4, 2.4], ['kb', 'note', T.HAT + 0.8, 2.2], ['woman', 'heart', 232, 2.4], ['man', 'heart', 233, 2.4], ['dog', 'heart', 234, 2.2], ['kc', 'note', 231, 2.2]
 ];
 function drawEmotes(t) {
   for (const [who, icon, t0, dur] of EMOTES) {

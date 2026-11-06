@@ -27,6 +27,7 @@ const PINES = [
   /* framing the foreground */ [-6, 142, 66], [14, 150, 58], [152, 34, 62], [160, 12, 56], [140, 54, 50]
 ];
 const DECOR = { x: 40, y: 22, h: 40, lights: [] };
+const FOREST = [];                                   // the ridge's front row, which the yeti weaves through
 function buildPines() {
   const sprites = new Map(), spriteFor = (h, seed) => { const k = h * 8 + (seed & 7); if (!sprites.has(k)) sprites.set(k, pineSpr(h, h + (seed & 7) * 13)); return sprites.get(k); };
   for (const [x, y, h] of PINES) {
@@ -39,7 +40,7 @@ function buildPines() {
   for (const [back, step, h0, h1] of [[6, 9, 26, 38], [-2, 7, 30, 46]]) for (let u = -128; u < 134; u += step * (0.7 + q() * 0.6)) {
     const v = vBack(u) + (back > 0 ? -back - q() * 5 : 1.5 + q() * 6), x = uvToX(u, v), y = uvToY(u, v), h = Math.round(lerp(h0, h1, q()) / 2) * 2, z = Math.max(0, GZ(uvToX(u, Math.max(v, vBack(u) + 1)), uvToY(u, Math.max(v, vBack(u) + 1))));
     if (Math.hypot(x - HILL.x, y - HILL.y) < 30 || (u > -60 && u < -26 && v > -46)) continue;
-    OBJ = objNew(); stampS(spriteFor(h, Math.round(u)), x, y, z - 1, 0); if (back <= 0) foot(x - 2, y - 2, x + 2, y + 2, z, 0.6);
+    OBJ = objNew(); stampS(spriteFor(h, Math.round(u)), x, y, z - 1, 0); if (back <= 0) { foot(x - 2, y - 2, x + 2, y + 2, z, 0.6); FOREST.push({ x, y, u, v, z, h }); }
   }
   /* the fairy-light pine in the yard */
   const sp = pineSpr(DECOR.h, 77);

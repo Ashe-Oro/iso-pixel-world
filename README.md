@@ -14,7 +14,7 @@ seamlessly, and plays the same way for a given seed.
 | --- | --- | --- |
 | Rainy Night Dollhouse | [`/dollhouse/`](https://smol-iso-world.vercel.app/dollhouse/) | A girl reads by the fire on a stormy night while her dachshund and cat doze, wander and snuggle. Loops every 120 seconds. |
 | Sky Island | [`/sky-island/`](https://smol-iso-world.vercel.app/sky-island/) | An autumn island above the clouds, from dusk through the night to dawn. A girl reads on the porch, a boy fishes off the edge and a cat hunts the pond. Loops every 300 seconds. |
-| Winter Wonderland | [`/winter-wonderland/`](https://smol-iso-world.vercel.app/winter-wonderland/) | A snowy valley below the mountains, from golden hour to the blue hour and back. Kids sled and build a snowman, a big dog knocks it down, and the Sky Island couple rock on the cabin porch with cocoa while their cat comes out through the cat flap to snuggle. Loops every 240 seconds. |
+| Winter Wonderland | [`/winter-wonderland/`](https://smol-iso-world.vercel.app/winter-wonderland/) | A snowy valley below the mountains, from golden hour to the blue hour and back. Kids sled and build a snowman, a big dog knocks it down, and the Sky Island couple rock on the cabin porch with cocoa while their cat comes out through the cat flap to snuggle, and a yeti wanders through the forest. Loops every 240 seconds. |
 
 ## Repository layout
 

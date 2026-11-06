@@ -39,7 +39,7 @@ const CFG = { seed: 7, loop: true, speed: 1, debug: false, t0: 0, paused: false,
 const FX = {
   characters: 1, lighting: 1, dither: 1, clouds: 1, stars: 1, aurora: 1, moon: 1, wisps: 1,
   birds: 1, snowfall: 1, sparkle: 1, spindrift: 1, smoke: 1, lamps: 1, stringlights: 1, treelights: 1,
-  icicles: 1, breath: 1, spray: 1, steam: 1, trails: 1, cardinal: 1, hare: 1, deer: 1, emotes: 1
+  icicles: 1, breath: 1, spray: 1, steam: 1, trails: 1, cardinal: 1, hare: 1, deer: 1, yeti: 1, emotes: 1
 };
 
 /* ---------- deterministic hashing / RNG ---------- */
